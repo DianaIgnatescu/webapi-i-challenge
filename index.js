@@ -21,7 +21,7 @@ server.get('/api', (req, res) => {
 });
 
 server.get('/api/users/:id', (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id;
   db.findById(id)
     .then(user => {
       if (!user) {
@@ -55,7 +55,41 @@ server.post('/api/users', (req, res) => {
     .catch(error => {
       res.status(500).json({ error: "There was an error while saving the user to the database." })
     })
+});
 
+server.delete('/api/users/:id', (req, res) => {
+  const { id } = req.params;
+  db.remove(id)
+    .then(data => {
+      if (!data) {
+        res.status(404).json({ message: "The user with the specified ID does not exist." })
+      } else {
+        res.status(200).json({ message: `The user with id ${id} has now been removed from the database.`});
+      }
+    })
+    .catch(error => {
+      res.status(500).json({ error: "The user could not be removed."})
+    });
+});
+
+server.put('/api/users/:id', (req, res) => {
+  const id = req.params.id;
+  const user = req.body;
+  const name = req.body.name;
+  const bio = req.body.bio;
+  if (!name || !bio) {
+    res.status(400).json({ errorMessage: "Please provide name and bio for the user."});
+  }
+  db.update(id, user)
+      .then(data => {
+        if (!data) {
+          res.status(404).json({ message: "The user with the specified ID does not exist."});
+        }
+        res.status(200).json({ user: {...user, id }})
+      })
+      .catch(error => {
+        res.status(500).json({ error: "The user information could not be modified."});
+      })
 });
 
 server.listen(5000, () =>
